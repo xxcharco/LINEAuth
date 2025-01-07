@@ -2,22 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -28,11 +22,6 @@ class User extends Authenticatable
         'line_token_expires_at'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -40,11 +29,6 @@ class User extends Authenticatable
         'line_refresh_token'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'line_token_expires_at' => 'datetime',
@@ -73,10 +57,10 @@ class User extends Authenticatable
     public function activePartnership()
     {
         return $this->initiatedPartnerships()
-            ->whereNotNull('matched_at')
+            ->active()
             ->first() ?? 
             $this->receivedPartnerships()
-            ->whereNotNull('matched_at')
+            ->active()
             ->first();
     }
 
@@ -96,12 +80,23 @@ class User extends Authenticatable
     }
 
     /**
-     * LINEトークンが有効かどうかを確認
+     * パートナーシップの招待が可能かどうか
+     */
+    public function canInvitePartner(): bool
+    {
+        return !$this->activePartnership() && 
+               !$this->initiatedPartnerships()
+                    ->pending()
+                    ->exists();
+    }
+
+    /**
+     * LINEトークンが有効かどうか
      */
     public function hasValidLineToken(): bool
     {
-        return $this->line_token_expires_at 
-            && $this->line_token_expires_at->isFuture()
-            && $this->line_access_token;
+        return $this->line_token_expires_at && 
+               $this->line_token_expires_at->isFuture() &&
+               $this->line_access_token;
     }
 }
