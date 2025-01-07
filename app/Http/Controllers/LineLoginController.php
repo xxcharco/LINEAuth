@@ -8,17 +8,17 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class LineLoginController extends Controller
 {
-    // LINEログイン画面へのリダイレクト
     public function lineLogin()
     {
         $state = Str::random(32);
         $nonce = Str::random(32);
         
-        // セッションにstateを保存（CSRF対策）
         session(['line_state' => $state]);
+        session(['line_nonce' => $nonce]);
         
         $queryParams = http_build_query([
             'response_type' => 'code',
@@ -33,7 +33,6 @@ class LineLoginController extends Controller
         return redirect('https://access.line.me/oauth2/v2.1/authorize?' . $queryParams);
     }
 
-    // アクセストークン取得
     private function getAccessToken($code)
     {
         $response = Http::asForm()->post('https://api.line.me/oauth2/v2.1/token', [
@@ -48,10 +47,9 @@ class LineLoginController extends Controller
             return null;
         }
 
-        return $response->json()['access_token'];
+        return $response->json();
     }
 
-    // プロフィール取得
     private function getProfile($accessToken)
     {
         $response = Http::withHeaders([
@@ -65,37 +63,67 @@ class LineLoginController extends Controller
         return $response->json();
     }
 
-    // コールバック処理
     public function callback(Request $request)
     {
-        // CSRF対策のstate検証
         if ($request->state !== session('line_state')) {
             return redirect()->route('login')->with('error', '不正なアクセスです。');
         }
 
-        // アクセストークン取得
-        $accessToken = $this->getAccessToken($request->code);
-        if (!$accessToken) {
+        $tokenResponse = $this->getAccessToken($request->code);
+        if (!$tokenResponse) {
             return redirect()->route('login')->with('error', 'LINEログインに失敗しました。');
         }
 
-        // プロフィール取得
-        $profile = $this->getProfile($accessToken);
+        $profile = $this->getProfile($tokenResponse['access_token']);
         if (!$profile) {
             return redirect()->route('login')->with('error', 'プロフィールの取得に失敗しました。');
         }
 
         // ユーザー取得または作成
         $user = User::updateOrCreate(
-            ['line_id' => $profile['userId']],
+            ['line_user_id' => $profile['userId']],
             [
                 'name' => $profile['displayName'],
-                'provider' => 'line'
+                'line_access_token' => $tokenResponse['access_token'],
+                'line_refresh_token' => $tokenResponse['refresh_token'] ?? null,
+                'line_token_expires_at' => isset($tokenResponse['expires_in']) 
+                    ? Carbon::now()->addSeconds($tokenResponse['expires_in'])
+                    : null
             ]
         );
 
         Auth::login($user);
 
-        return redirect()->intended('/dashboard');
+        return Inertia::location(redirect()->intended('/dashboard')->getTargetUrl());
+    }
+
+    public function refreshToken(User $user)
+    {
+        if (!$user->line_refresh_token) {
+            return false;
+        }
+
+        $response = Http::asForm()->post('https://api.line.me/oauth2/v2.1/token', [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $user->line_refresh_token,
+            'client_id' => config('services.line.client_id'),
+            'client_secret' => config('services.line.client_secret'),
+        ]);
+
+        if (!$response->successful()) {
+            return false;
+        }
+
+        $tokenData = $response->json();
+
+        $user->update([
+            'line_access_token' => $tokenData['access_token'],
+            'line_refresh_token' => $tokenData['refresh_token'] ?? $user->line_refresh_token,
+            'line_token_expires_at' => isset($tokenData['expires_in']) 
+                ? Carbon::now()->addSeconds($tokenData['expires_in'])
+                : null
+        ]);
+
+        return true;
     }
 }
