@@ -2,115 +2,103 @@
 
 namespace App\Services;
 
-use App\Models\Partnership;
 use App\Models\User;
-use Illuminate\Support\Str;
+use App\Models\Partnership;
 use App\Exceptions\PartnershipException;
-use LINE\Laravel\Facades\LINEBot;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PartnershipService
 {
-    private $lineBot;
-    
-    public function __construct(LINEBot $lineBot)
+    private $lineMessageService;
+
+    public function __construct(LineMessageService $lineMessageService)
     {
-        $this->lineBot = $lineBot;
+        $this->lineMessageService = $lineMessageService;
     }
 
-    public function createInvitation(User $user)
+    /**
+     * パートナーシップの招待を作成
+     */
+    public function createInvitation(User $user): Partnership
     {
-        // Check if user already has an active partnership
-        if ($this->hasActivePartnership($user)) {
-            throw new PartnershipException('既にパートナーシップが存在します');
+        if (!$user->canInvitePartner()) {
+            throw new PartnershipException('既にパートナーシップが存在するか、有効な招待があります');
         }
 
-        // Create new partnership with invitation token
         return Partnership::create([
             'user1_id' => $user->id,
             'invitation_token' => $this->generateUniqueToken(),
             'invitation_sent_at' => now(),
-            'expires_at' => now()->addDays(7), // 7日間有効
+            'expires_at' => now()->addDays(config('line.partnership.invitation_expires_days', 7))
         ]);
     }
 
-    public function processMatch(string $token, User $user2)
+    /**
+     * パートナーシップのマッチングを処理
+     */
+    public function processMatch(string $token, User $user2): Partnership
     {
         $partnership = Partnership::where('invitation_token', $token)
             ->where('expires_at', '>', now())
             ->whereNull('user2_id')
             ->firstOrFail();
 
-        // Prevent self-matching
         if ($partnership->user1_id === $user2->id) {
             throw new PartnershipException('自分自身とマッチングすることはできません');
         }
 
-        // Check if user2 already has an active partnership
-        if ($this->hasActivePartnership($user2)) {
+        if (!$user2->canInvitePartner()) {
             throw new PartnershipException('既に他のパートナーシップが存在します');
         }
 
-        // Update partnership with user2 details
         $partnership->update([
             'user2_id' => $user2->id,
             'matched_at' => now(),
-            'invitation_token' => null // Invalidate token after matching
+            'invitation_token' => null
         ]);
 
-        // Send LINE notification to both users
-        $this->sendMatchNotification($partnership);
+        // マッチング完了通知を送信
+        $this->sendMatchCompleteNotifications($partnership);
 
         return $partnership;
     }
 
-    private function hasActivePartnership(User $user)
+    /**
+     * 招待URLを生成
+     */
+    public function generateInvitationUrl(Partnership $partnership): string
     {
-        return Partnership::where(function ($query) use ($user) {
-            $query->where('user1_id', $user->id)
-                  ->orWhere('user2_id', $user->id);
-        })
-        ->whereNotNull('matched_at')
-        ->exists();
+        return config('app.url') . '/partnerships/join/' . $partnership->invitation_token;
     }
 
-    private function generateUniqueToken()
+    /**
+     * パートナーシップの招待メッセージを送信
+     */
+    public function sendInvitation(Partnership $partnership): void
+    {
+        $invitationUrl = $this->generateInvitationUrl($partnership);
+        $this->lineMessageService->sendInvitation($partnership->user1, $invitationUrl);
+    }
+
+    /**
+     * マッチング完了通知を送信
+     */
+    private function sendMatchCompleteNotifications(Partnership $partnership): void
+    {
+        $this->lineMessageService->sendMatchComplete($partnership->user1);
+        $this->lineMessageService->sendMatchComplete($partnership->user2);
+    }
+
+    /**
+     * ユニークな招待トークンを生成
+     */
+    private function generateUniqueToken(): string
     {
         do {
             $token = Str::random(32);
         } while (Partnership::where('invitation_token', $token)->exists());
 
         return $token;
-    }
-
-    private function sendMatchNotification(Partnership $partnership)
-    {
-        $messageTemplate = [
-            'type' => 'flex',
-            'altText' => 'パートナーシップが完了しました',
-            'contents' => [
-                'type' => 'bubble',
-                'body' => [
-                    'type' => 'box',
-                    'layout' => 'vertical',
-                    'contents' => [
-                        [
-                            'type' => 'text',
-                            'text' => 'マッチングが完了しました！',
-                            'weight' => 'bold',
-                            'size' => 'xl'
-                        ],
-                        [
-                            'type' => 'text',
-                            'text' => '新しい機能が利用可能になりました',
-                            'margin' => 'md'
-                        ]
-                    ]
-                ]
-            ]
-        ];
-
-        // Send to both users
-        $this->lineBot->pushMessage($partnership->user1->line_user_id, $messageTemplate);
-        $this->lineBot->pushMessage($partnership->user2->line_user_id, $messageTemplate);
     }
 }
