@@ -35,6 +35,9 @@ return [
     'client_id' => env('LINE_CHANNEL_ID'),
     'client_secret' => env('LINE_CHANNEL_SECRET'),
     'redirect' => env('LINE_REDIRECT'),
+    'id' => env('LINE_MESSAGE_CHANNEL_ID'),
+    'secret' => env('LINE_MESSAGE_CHANNEL_SECRET'),
+    'token' => env('LINE_MESSAGE_CHANNEL_ACCESS_TOKEN'),
     ],
 
 ];

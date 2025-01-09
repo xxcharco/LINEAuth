@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LineLoginController;
+use App\Http\Controllers\PartnershipController;
+use App\Http\Controllers\LineWebhookController; 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -42,5 +44,22 @@ Route::middleware('guest')->group(function () {
     Route::get('/line/callback', [LineLoginController::class, 'callback'])
         ->name('line.callback');
 });
+
+// パートナーシップ関連のルート
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('partnerships')->group(function () {
+        Route::get('/invite', [PartnershipController::class, 'showInvitation'])
+            ->name('partnerships.invite');
+        Route::post('/invite', [PartnershipController::class, 'createInvitation'])
+            ->name('partnerships.create');
+        Route::get('/join/{token}', [PartnershipController::class, 'showJoin'])
+            ->name('partnerships.join');
+        Route::post('/join/{token}', [PartnershipController::class, 'processMatch'])
+            ->name('partnerships.match');
+    });
+});
+
+// Webhookルートの追加（authミドルウェア不要）
+Route::post('webhook/linebot', [LineWebhookController::class, 'reply']);
 
 require __DIR__.'/auth.php';
