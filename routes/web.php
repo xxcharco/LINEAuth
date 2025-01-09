@@ -56,6 +56,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('partnerships.join');
         Route::post('/join/{token}', [PartnershipController::class, 'processMatch'])
             ->name('partnerships.match');
+        Route::get('/', [PartnershipController::class, 'show'])
+            ->name('partnerships.show');
     });
 });
 
