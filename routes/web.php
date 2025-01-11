@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LineLoginController;
 use App\Http\Controllers\PartnershipController;
 use App\Http\Controllers\LineWebhookController; 
+use App\Http\Controllers\PartnershipInvitationController; 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -47,25 +48,27 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('partnerships')->group(function () {
-        // パートナーシップ情報
+        // パートナーシップ情報の表示
         Route::get('/', [PartnershipController::class, 'show'])
             ->name('partnerships.show');
+            
+        // マッチング処理
+        Route::post('/join/{token}', [PartnershipController::class, 'processMatch'])
+            ->name('partnerships.match');
 
-        // 招待関連
-        Route::get('/invite', [PartnershipController::class, 'showInvitation'])
+        // 招待関連（
+        Route::get('/invite', [PartnershipInvitationController::class, 'create'])
             ->name('partnerships.invite');
-        Route::post('/invite', [PartnershipController::class, 'createInvitation'])
+        Route::post('/invite', [PartnershipInvitationController::class, 'store'])
             ->name('partnerships.create');
-
+        
         // 招待リンク表示
-        Route::get('/invitation', [PartnershipController::class, 'showInvitationLink'])
+        Route::get('/invitation', [PartnershipInvitationController::class, 'show'])
             ->name('partnerships.invitation');
 
         // 招待承認関連
-        Route::get('/join/{token}', [PartnershipController::class, 'showJoin'])
+        Route::get('/join/{token}', [PartnershipInvitationController::class, 'showJoin'])
             ->name('partnerships.join');
-        Route::post('/join/{token}', [PartnershipController::class, 'processMatch'])
-            ->name('partnerships.match');
     });
 });
 
