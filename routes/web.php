@@ -45,19 +45,27 @@ Route::middleware('guest')->group(function () {
         ->name('line.callback');
 });
 
-// パートナーシップ関連のルート
 Route::middleware(['auth'])->group(function () {
     Route::prefix('partnerships')->group(function () {
+        // パートナーシップ情報
+        Route::get('/', [PartnershipController::class, 'show'])
+            ->name('partnerships.show');
+
+        // 招待関連
         Route::get('/invite', [PartnershipController::class, 'showInvitation'])
             ->name('partnerships.invite');
         Route::post('/invite', [PartnershipController::class, 'createInvitation'])
             ->name('partnerships.create');
+
+        // 招待リンク表示
+        Route::get('/invitation', [PartnershipController::class, 'showInvitationLink'])
+            ->name('partnerships.invitation');
+
+        // 招待承認関連
         Route::get('/join/{token}', [PartnershipController::class, 'showJoin'])
             ->name('partnerships.join');
         Route::post('/join/{token}', [PartnershipController::class, 'processMatch'])
             ->name('partnerships.match');
-        Route::get('/', [PartnershipController::class, 'show'])
-            ->name('partnerships.show');
     });
 });
 

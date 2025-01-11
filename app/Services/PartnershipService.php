@@ -6,66 +6,30 @@ use App\Models\User;
 use App\Models\Partnership;
 use App\Exceptions\PartnershipException;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class PartnershipService
 {
-    private $lineMessageService;
-
-    public function __construct(LineMessageService $lineMessageService)
-    {
-        $this->lineMessageService = $lineMessageService;
-    }
-
     /**
      * パートナーシップの招待を作成
      */
     public function createInvitation(User $user): Partnership
     {
-        if (!$user->canInvitePartner()) {
-            throw new PartnershipException('既にパートナーシップが存在するか、有効な招待があります');
+        // 既存のアクティブなパートナーシップをチェック
+        if ($user->activePartnership()) {
+            throw new PartnershipException('既にパートナーシップが存在します');
         }
 
+        // 招待トークンを生成
         return Partnership::create([
             'user1_id' => $user->id,
-            'invitation_token' => $this->generateUniqueToken(),
+            'invitation_token' => Str::random(32),
             'invitation_sent_at' => now(),
-            'expires_at' => now()->addDays(config('line.partnership.invitation_expires_days', 7))
+            'expires_at' => now()->addDays(7)
         ]);
     }
 
     /**
-     * パートナーシップのマッチングを処理
-     */
-    public function processMatch(string $token, User $user2): Partnership
-    {
-        $partnership = Partnership::where('invitation_token', $token)
-            ->where('expires_at', '>', now())
-            ->whereNull('user2_id')
-            ->firstOrFail();
-
-        if ($partnership->user1_id === $user2->id) {
-            throw new PartnershipException('自分自身とマッチングすることはできません');
-        }
-
-        if (!$user2->canInvitePartner()) {
-            throw new PartnershipException('既に他のパートナーシップが存在します');
-        }
-
-        $partnership->update([
-            'user2_id' => $user2->id,
-            'matched_at' => now(),
-            'invitation_token' => null
-        ]);
-
-        // マッチング完了通知を送信
-        $this->sendMatchCompleteNotifications($partnership);
-
-        return $partnership;
-    }
-
-    /**
-     * 招待URLを生成
+     * 招待用のURLを生成
      */
     public function generateInvitationUrl(Partnership $partnership): string
     {
@@ -73,32 +37,44 @@ class PartnershipService
     }
 
     /**
-     * パートナーシップの招待メッセージを送信
+     * LINEでシェアするためのURLを生成
      */
-    public function sendInvitation(Partnership $partnership): void
+    public function generateLineShareUrl(Partnership $partnership): string
     {
         $invitationUrl = $this->generateInvitationUrl($partnership);
-        $this->lineMessageService->sendInvitation($partnership->user1, $invitationUrl);
+        $message = "パートナー招待が届いています\n詳細はこちら：" . $invitationUrl;
+
+        return 'https://line.me/R/msg/text/?' . urlencode($message);
     }
 
     /**
-     * マッチング完了通知を送信
+     * パートナーシップのマッチングを処理
      */
-    private function sendMatchCompleteNotifications(Partnership $partnership): void
+    public function processMatch(string $token, User $user2): Partnership
     {
-        $this->lineMessageService->sendMatchComplete($partnership->user1);
-        $this->lineMessageService->sendMatchComplete($partnership->user2);
-    }
+        // 招待トークンが有効か確認
+        $partnership = Partnership::where('invitation_token', $token)
+            ->where('expires_at', '>', now())
+            ->whereNull('user2_id')
+            ->firstOrFail();
 
-    /**
-     * ユニークな招待トークンを生成
-     */
-    private function generateUniqueToken(): string
-    {
-        do {
-            $token = Str::random(32);
-        } while (Partnership::where('invitation_token', $token)->exists());
+        // 自分自身との組み合わせをチェック
+        if ($partnership->user1_id === $user2->id) {
+            throw new PartnershipException('自分自身とマッチングすることはできません');
+        }
 
-        return $token;
+        // user2の既存パートナーシップをチェック
+        if ($user2->activePartnership()) {
+            throw new PartnershipException('既に他のパートナーシップが存在します');
+        }
+
+        // マッチングを確定
+        $partnership->update([
+            'user2_id' => $user2->id,
+            'matched_at' => now(),
+            'invitation_token' => null
+        ]);
+
+        return $partnership;
     }
 }

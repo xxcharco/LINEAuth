@@ -11,7 +11,7 @@ class PartnershipInvitationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return true; // 認証済みユーザーのみがアクセスできるようルートで制限
     }
 
     /**

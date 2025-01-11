@@ -3,74 +3,76 @@
 namespace App\Services;
 
 use App\Models\User;
-use LINE\Laravel\Facade\LINEBot;
-use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
-use LINE\LINEBot\MessageBuilder\FlexMessageBuilder;
-use LINE\LINEBot\MessageBuilder\RawMessageBuilder;
+use \GuzzleHttp\Client;
+use \LINE\Parser\EventRequestParser;
+use \LINE\Webhook\EventRequestParser as WebhookEventRequestParser;
 
 class LineMessageService
 {
-    private $bot;
+    private $channelToken;
+    private $channelSecret;
+    private $client;
 
-    public function __construct(LINEBot $bot)
+    public function __construct()
     {
-        $this->bot = $bot;
+        $this->channelToken = config('services.line.token');
+        $this->channelSecret = config('services.line.secret');
+        $this->client = new Client([
+            'base_uri' => 'https://api.line.me',
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->channelToken,
+                'Content-Type' => 'application/json',
+            ],
+        ]);
     }
 
     /**
-     * パートナー招待メッセージを送信
+     * 招待作成通知を送信
      */
-    public function sendInvitation(User $user, string $invitationUrl): bool
+    public function sendInvitationCreated(User $user): bool
     {
-        $message = new FlexMessageBuilder(
-            'パートナー招待',
-            [
-                'type' => 'bubble',
-                'body' => [
-                    'type' => 'box',
-                    'layout' => 'vertical',
-                    'contents' => [
+        try {
+            $response = $this->client->post('/v2/bot/message/push', [
+                'json' => [
+                    'to' => $user->line_user_id,
+                    'messages' => [
                         [
                             'type' => 'text',
-                            'text' => 'パートナー招待が届いています',
-                            'weight' => 'bold',
-                            'size' => 'md'
-                        ],
-                        [
-                            'type' => 'button',
-                            'style' => 'primary',
-                            'action' => [
-                                'type' => 'uri',
-                                'label' => '招待を確認する',
-                                'uri' => $invitationUrl
-                            ]
+                            'text' => '招待を送りました！パートナーの登録が完了したらお知らせします'
                         ]
                     ]
                 ]
-            ]
-        );
+            ]);
 
-        $response = $this->bot->pushMessage($user->line_user_id, $message);
-        return $response->isSucceeded();
+            return $response->getStatusCode() === 200;
+        } catch (\Exception $e) {
+            \Log::error('LINE message sending failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
      * マッチング完了通知を送信
      */
-    public function sendMatchComplete(User $user): bool
+    public function sendMatchComplete(User $user, User $partner): bool
     {
-        $message = new TextMessageBuilder('パートナーシップが確立されました！');
-        $response = $this->bot->pushMessage($user->line_user_id, $message);
-        return $response->isSucceeded();
-    }
+        try {
+            $response = $this->client->post('/v2/bot/message/push', [
+                'json' => [
+                    'to' => $user->line_user_id,
+                    'messages' => [
+                        [
+                            'type' => 'text',
+                            'text' => "{$partner->name}さんとのパートナーシップが確立されました！\n特別な機能が利用可能になりました。"
+                        ]
+                    ]
+                ]
+            ]);
 
-    /**
-     * システム通知を送信
-     */
-    public function sendSystemNotification(User $user, string $message): bool
-    {
-        $textMessage = new TextMessageBuilder($message);
-        $response = $this->bot->pushMessage($user->line_user_id, $textMessage);
-        return $response->isSucceeded();
+            return $response->getStatusCode() === 200;
+        } catch (\Exception $e) {
+            \Log::error('LINE message sending failed: ' . $e->getMessage());
+            return false;
+        }
     }
 }
