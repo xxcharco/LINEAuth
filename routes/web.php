@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LineLoginController;
 use App\Http\Controllers\PartnershipController;
 use App\Http\Controllers\LineWebhookController; 
-use App\Http\Controllers\PartnershipInvitationController; 
+use App\Http\Controllers\PartnershipInvitationController;
+use App\Http\Controllers\ConditionController;
+use App\Http\Controllers\MenstruationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -70,6 +72,29 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/join/{token}', [PartnershipInvitationController::class, 'showJoin'])
             ->name('partnerships.join');
     });
+
+        // 体調記録関連のルートをグループ化
+        Route::prefix('conditions')->name('conditions.')->group(function () {
+            // 基本機能
+            Route::get('/', [ConditionController::class, 'index'])->name('index');
+            Route::post('/store', [ConditionController::class, 'store'])->name('store');
+            
+            // 表示機能
+            Route::get('/history', [ConditionController::class, 'history'])->name('history');
+            Route::get('/graph', [ConditionController::class, 'graph'])->name('graph');
+            Route::get('/cycle', [ConditionController::class, 'cycle'])->name('cycle');
+            
+            // リソース操作
+            Route::get('/{condition}/edit', [ConditionController::class, 'edit'])->name('edit');
+            Route::put('/{condition}', [ConditionController::class, 'update'])->name('update');
+            Route::delete('/{condition}', [ConditionController::class, 'destroy'])->name('destroy');
+        });
+
+            // // 月経記録関連のルート
+            // Route::get('/menstruation', [MenstruationController::class, 'index'])->name('menstruation.index');
+            // Route::get('/menstruation/create', [MenstruationController::class, 'create'])->name('menstruation.create');
+            // Route::post('/menstruation', [MenstruationController::class, 'store'])->name('menstruation.store');
+            // Route::post('/menstruation/end', [MenstruationController::class, 'storeEnd'])->name('menstruation.storeEnd');
 });
 
 // Webhookルートの追加（authミドルウェア不要）
