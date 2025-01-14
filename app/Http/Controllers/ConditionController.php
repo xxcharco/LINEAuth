@@ -4,21 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Models\Condition;
 use App\Models\User;
+use Carbon\Carbon; 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class ConditionController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($date = null)
     {
-        $user = User::find(auth()->id());
-        $conditions = Condition::orderBy('recorded_date', 'desc')->get();
+        $targetDate = $date ? Carbon::parse($date) : now();
+
+        Log::info('Processing date:', ['date' => $targetDate->format('Y-m-d')]);
+
+        // その日の記録を取得
+        $todayCondition = Condition::where('recorded_date', $targetDate->format('Y-m-d'))
+        ->first();
         
+        // デバッグログの追加
+        Log::info('Today\'s condition:', ['condition' => $todayCondition]);
+
         return Inertia::render('Conditions/Index', [
-            'conditions' => $conditions,
+            'currentDate' => $targetDate->format('Y-m-d'),
+            'existingData' => $todayCondition,
             'message' => session('message')
         ]);
     }
@@ -36,15 +47,21 @@ class ConditionController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'is_high' => 'required|boolean',
-            'condition' => 'required|in:良い,やや良い,やや悪い,悪い',
+        Log::info('Received request data:', $request->all());
+
+        $validated = $request->validate([
+            'desire_level' => 'required|integer|between:1,5',
+            'condition' => 'required|in:良い,普通,悪い',
         ]);
-    
-        $condition = new Condition($request->input());
-        $condition->recorded_date = now();
-        $condition->save();
-    
+
+        // 同じ日付のデータがあれば更新、なければ新規作成
+        $condition = Condition::updateOrCreate(
+            ['recorded_date' => now()->format('Y-m-d')],  // 検索条件
+            $validated  // 更新または作成するデータ
+        );
+
+        Log::info('Saved condition:', $condition->toArray());
+
         return Inertia::render('Conditions/Complete');
     }
 
@@ -112,5 +129,11 @@ class ConditionController extends Controller
         
         return redirect()->route('conditions.graph')
             ->with('message', '削除しました');
+    }
+
+    public function getByDate($date)
+    {
+        $condition = Condition::where('recorded_date', $date)->first();
+        return response()->json($condition);
     }
 }

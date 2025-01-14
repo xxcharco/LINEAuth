@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('conditions', function (Blueprint $table) {
+        Schema::create('intimacy_logs', function (Blueprint $table) {
             $table->id();
-            $table->date('recorded_date');
-            $table->boolean('is_high');  // 高まっている/いない
-            $table->enum('condition', ['良い', 'やや良い', 'やや悪い', '悪い']);
+            $table->foreignId('user_id')->constrained();
+            $table->enum('type', ['sex', 'masturbation']);
+            $table->date('date');
+            $table->integer('count')->unsigned()->nullable();
+            $table->text('memo')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('conditions');
+        Schema::dropIfExists('intimacy_logs');
     }
 };

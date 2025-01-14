@@ -11,12 +11,12 @@ class Condition extends Model
 
     protected $fillable = [
         'recorded_date',
-        'is_high',
+        'desire_level',
         'condition'
     ];
 
     protected $casts = [
-        'is_high' => 'boolean',
-        'recorded_date' => 'date'
+        'recorded_date' => 'date',
+        'desire_level' => 'integer'
     ];
 }

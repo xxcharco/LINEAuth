@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\IntimacyLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LineLoginController;
 use App\Http\Controllers\PartnershipController;
@@ -88,13 +89,33 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{condition}/edit', [ConditionController::class, 'edit'])->name('edit');
             Route::put('/{condition}', [ConditionController::class, 'update'])->name('update');
             Route::delete('/{condition}', [ConditionController::class, 'destroy'])->name('destroy');
+
+            // 日付指定のルートを追加
+            Route::get('/date/{date}', [ConditionController::class, 'index'])->name('date');
+
         });
 
-            // // 月経記録関連のルート
-            // Route::get('/menstruation', [MenstruationController::class, 'index'])->name('menstruation.index');
-            // Route::get('/menstruation/create', [MenstruationController::class, 'create'])->name('menstruation.create');
-            // Route::post('/menstruation', [MenstruationController::class, 'store'])->name('menstruation.store');
-            // Route::post('/menstruation/end', [MenstruationController::class, 'storeEnd'])->name('menstruation.storeEnd');
+        // 月経記録関連のルートをグループ化
+        Route::prefix('menstruation')->name('menstruation.')->group(function () {
+            // 基本機能
+            Route::get('/', [MenstruationController::class, 'index'])->name('index');
+            Route::get('/create', [MenstruationController::class, 'create'])->name('create');
+            Route::post('/', [MenstruationController::class, 'store'])->name('store');
+            Route::post('/end', [MenstruationController::class, 'storeEnd'])->name('storeEnd');
+        // 編集関連のルート
+            Route::get('/{menstruation}/edit', [MenstruationController::class, 'edit'])->name('edit');
+            Route::put('/{menstruation}', [MenstruationController::class, 'update'])->name('update');
+            Route::delete('/{menstruation}', [MenstruationController::class, 'destroy'])->name('destroy');
+    });
+
+        // なかよしログ関連のルートをグループ化
+        Route::prefix('intimacy')->name('intimacy.')->group(function () {
+            Route::get('/', [IntimacyLogController::class, 'index'])->name('index');
+            Route::post('/record', [IntimacyLogController::class, 'store'])->name('store');
+            Route::post('/record-batch', [IntimacyLogController::class, 'storeBatch'])->name('storeBatch');
+            Route::get('/list', [IntimacyLogController::class, 'list'])->name('list');
+            Route::get('/complete', [IntimacyLogController::class, 'complete'])->name('complete');
+        });
 });
 
 // Webhookルートの追加（authミドルウェア不要）
