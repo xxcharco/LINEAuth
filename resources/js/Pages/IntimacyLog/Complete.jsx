@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import Footer from '@/Components/Footer';
 
 export default function Complete() {
     return (
@@ -50,6 +51,7 @@ export default function Complete() {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

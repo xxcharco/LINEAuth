@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import Footer from '@/Components/Footer';
 
 export default function List({ logs }) {
     return (
@@ -52,6 +53,7 @@ export default function List({ logs }) {
                     </Link>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

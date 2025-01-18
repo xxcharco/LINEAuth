@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Alert } from '@/components/ui/alert';
+import { Alert } from '@/Components/ui/alert';
 
 const PartnershipJoin = ({ auth, token, inviter, canAccept, isOwnInvitation, error, flash }) => {
     const [processing, setProcessing] = useState(false);

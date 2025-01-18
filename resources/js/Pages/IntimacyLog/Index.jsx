@@ -1,5 +1,6 @@
 import React from 'react';
 import { useForm, Link, router } from '@inertiajs/react';
+import Footer from '@/Components/Footer';
 
 export default function Index() {
     // セックス記録用のフォーム
@@ -162,6 +163,7 @@ export default function Index() {
                     記録を確認する
                 </Link>
             </div>
+            <Footer />
         </div>
     );
 }

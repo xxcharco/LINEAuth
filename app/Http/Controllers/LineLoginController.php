@@ -94,7 +94,7 @@ class LineLoginController extends Controller
 
         Auth::login($user);
 
-        return Inertia::location(redirect()->intended('/dashboard')->getTargetUrl());
+        return Inertia::location(redirect()->intended('/conditions')->getTargetUrl());
     }
 
     public function refreshToken(User $user)

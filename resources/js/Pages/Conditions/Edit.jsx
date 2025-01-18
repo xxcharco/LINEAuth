@@ -1,5 +1,5 @@
-// resources/js/Pages/Conditions/Edit.jsx
 import { Link, useForm } from '@inertiajs/react';
+import Footer from '@/Components/Footer';
 
 export default function Edit({ condition }) {
     const { data, setData, put, processing } = useForm({
@@ -107,6 +107,7 @@ export default function Edit({ condition }) {
                     </div>
                 </form>
             </div>
+            <Footer />
         </div>
     );
 }

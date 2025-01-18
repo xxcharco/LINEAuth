@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
+import Footer from '@/Components/Footer';
 
 export default function Complete({ message = '記録しました' }) {
     return (
@@ -65,6 +66,7 @@ export default function Complete({ message = '記録しました' }) {
                     </button>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }
