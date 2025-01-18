@@ -35,6 +35,11 @@ return [
     'client_id' => env('LINE_CHANNEL_ID'),
     'client_secret' => env('LINE_CHANNEL_SECRET'),
     'redirect' => env('LINE_REDIRECT'),
+    'id' => env('LINE_MESSAGE_CHANNEL_ID'),
+    'secret' => env('LINE_MESSAGE_CHANNEL_SECRET'),
+    'token' => env('LINE_MESSAGE_CHANNEL_ACCESS_TOKEN'),
+    'official_account_url' => env('LINE_OFFICIAL_ACCOUNT_URL'),
+    'add_friend_share_url' => env('LINE_ADD_FRIEND_SHARE_URL'),
     ],
 
 ];
