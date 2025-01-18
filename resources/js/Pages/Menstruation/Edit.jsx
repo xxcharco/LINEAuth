@@ -1,5 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import Footer from '@/Components/Footer';
 
 export default function Edit({ menstruation }) {
     const { data, setData, put, delete: destroy, processing } = useForm({
@@ -98,6 +99,7 @@ export default function Edit({ menstruation }) {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react'; 
+import Footer from '@/Components/Footer';
 
 export default function Index({ records }) {
     const [activeTab, setActiveTab] = useState(2);
@@ -102,15 +103,22 @@ export default function Index({ records }) {
                         記録を登録することができます。
                     </p>
                     <div className="grid grid-cols-2 gap-4">
-                        <button className="bg-gray-700 text-white p-4 rounded-lg">
+                        <Link 
+                            href={route('intimacy.index')} 
+                            className="bg-gray-700 text-white p-4 rounded-lg text-center"
+                        >
                             記録する
-                        </button>
-                        <button className="bg-gray-700 text-white p-4 rounded-lg">
+                        </Link>
+                        <Link 
+                            href={route('intimacy.list')} 
+                            className="bg-gray-700 text-white p-4 rounded-lg text-center"
+                        >
                             一覧を見る
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

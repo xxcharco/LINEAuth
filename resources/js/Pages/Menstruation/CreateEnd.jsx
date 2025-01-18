@@ -1,5 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import Footer from '@/Components/Footer';
 
 export default function CreateEnd() {
     const { data, setData, post, processing } = useForm({
@@ -42,6 +43,7 @@ export default function CreateEnd() {
                     </button>
                 </form>
             </div>
+            <Footer />
         </div>
     );
 }

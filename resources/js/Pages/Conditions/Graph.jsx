@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
+import Footer from '@/Components/Footer';
 
 export default function Graph({ conditions }) {
     const [selectedCondition, setSelectedCondition] = useState(null);
@@ -57,6 +58,7 @@ export default function Graph({ conditions }) {
                     ))}
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }
