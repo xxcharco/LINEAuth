@@ -12,7 +12,8 @@ export default function Create() {
             <div className="max-w-2xl mx-auto pt-8 px-4">
                 {/* ヘッダー */}
                 <div className="flex items-center mb-6">
-                    <Link href="/menstruation" className="text-gray-400">
+                    <Link href={route('conditions.index')}  
+                    className="text-gray-400">
                         ←
                     </Link>
                     <h1 className="text-center flex-1 font-bold">生理がきた</h1>
@@ -34,7 +35,7 @@ export default function Create() {
                     <button
                         onClick={(e) => {
                             e.preventDefault();
-                            post('/menstruation');
+                            post(route('menstruation.store'));
                         }}
                         disabled={processing}
                         className="w-full bg-black text-white p-4 rounded-lg disabled:opacity-50"

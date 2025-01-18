@@ -10,7 +10,8 @@ export default function Graph({ conditions }) {
             <div className="max-w-2xl mx-auto pt-8 px-4">
                 {/* ヘッダー */}
                 <div className="flex items-center mb-6">
-                    <Link href="/conditions" className="text-gray-400">
+                    <Link href={route('conditions.index')} 
+                    className="text-gray-400">
                         ←
                     </Link>
                     <h1 className="text-center flex-1 font-bold">記録を振り返る</h1>

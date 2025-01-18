@@ -8,7 +8,8 @@ export default function Complete({ message = '記録しました' }) {
             <div className="max-w-2xl mx-auto pt-8 px-4">
                 {/* ヘッダー部分 */}
                 <div className="flex items-center mb-6">
-                    <Link href="/conditions" className="text-gray-400">
+                    <Link href={route('conditions.index')} 
+                    className="text-gray-400">
                         ←
                     </Link>
                     <h1 className="text-center flex-1 font-bold">tawagram</h1>
@@ -48,13 +49,13 @@ export default function Complete({ message = '記録しました' }) {
                         昨日の体調を記録
                     </Link>
                     <Link 
-                        href="/conditions/graph" 
+                        href={route('conditions.graph')} 
                         className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"
                     >
                         グラフを見る
                     </Link>
                     <Link 
-                        href="/menstruation" 
+                        href={route('menstruation.index')}
                         className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"
                     >
                         月経を記録
