@@ -5,6 +5,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 
 const PartnershipShow = ({ auth, partnership, canInvite, flash }) => {
+
+    // デバッグ用のログ出力
+    console.log('Partnership Show Props:', {
+        partnership,
+        canInvite,
+        auth
+    });
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -41,7 +49,7 @@ const PartnershipShow = ({ auth, partnership, canInvite, flash }) => {
                                     </p>
                                     {canInvite && (
                                         <a
-                                            href="/partnerships/invite"
+                                            href={route('partnerships.invite')}
                                             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                         >
                                             パートナーを招待する

@@ -17,6 +17,7 @@ class Partnership extends Model
         'user1_id',
         'user2_id',
         'invitation_token',
+        'auth_code',
         'invitation_sent_at',
         'matched_at',
         'expires_at'

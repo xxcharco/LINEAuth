@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
@@ -84,10 +85,27 @@ class User extends Authenticatable
      */
     public function canInvitePartner(): bool
     {
-        return !$this->activePartnership() && 
-               !$this->initiatedPartnerships()
-                    ->pending()
-                    ->exists();
+        $activePartnership = $this->activePartnership();
+        $pendingInvitation = $this->initiatedPartnerships()
+            ->pending()
+            ->first();  // exists()ではなくfirst()を使用して実際のデータを取得
+    
+        // デバッグ用のログ出力
+        Log::info('canInvitePartner check', [
+            'user_id' => $this->id,
+            'user_name' => $this->name,
+            'has_active_partnership' => !!$activePartnership,
+            'has_pending_invitation' => !!$pendingInvitation,
+            // 保留中の招待がある場合、その詳細も出力
+            'pending_invitation' => $pendingInvitation ? [
+                'id' => $pendingInvitation->id,
+                'invitation_token' => $pendingInvitation->invitation_token,
+                'expires_at' => $pendingInvitation->expires_at,
+                'created_at' => $pendingInvitation->created_at
+            ] : null
+        ]);
+    
+        return !$activePartnership && !$pendingInvitation;
     }
 
     /**

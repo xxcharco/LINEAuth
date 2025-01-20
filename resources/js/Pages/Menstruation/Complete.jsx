@@ -22,7 +22,7 @@ export default function Complete({ message = '記録しました' }) {
 
                 {/* アクションボタン */}
                 <Link 
-                    href="/menstruation" 
+                    href={route('menstruation.index')} 
                     className="block w-full p-4 bg-black text-white rounded-lg text-center"
                 >
                     閉じる

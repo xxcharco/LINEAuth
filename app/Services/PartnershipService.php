@@ -9,8 +9,47 @@ use Illuminate\Support\Str;
 
 class PartnershipService
 {
+    private const LINE_FRIEND_ADD_URL = "https://lin.ee/lC8wTS1";
+
     /**
-     * パートナーシップの招待を作成
+     * LINE友達追加URLを生成
+     */
+    public function generateLineAddUrl(Partnership $partnership): string
+    {
+        if (!$partnership->invitation_token) {
+            throw new PartnershipException('招待トークンが設定されていません');
+        }
+
+        // 認証コードを生成
+        $authCode = $this->generateAuthCode($partnership->invitation_token, $partnership->user1_id);
+        
+        // パートナーシップレコードを更新
+        $partnership->update(['auth_code' => $authCode]);
+
+        // URLパラメータを作成
+        $params = http_build_query([
+            'ref' => 'partnership',
+            'ic' => $partnership->invitation_token,
+            'ac' => $authCode
+        ]);
+
+        // LINE友達追加URLにパラメータを追加
+        return self::LINE_FRIEND_ADD_URL . 
+            (str_contains(self::LINE_FRIEND_ADD_URL, '?') ? '&' : '?') . 
+            $params;
+    }
+
+    /**
+     * 認証コードを生成
+     */
+    private function generateAuthCode(string $invitationToken, int $userId): string
+    {
+        $data = $invitationToken . $userId . config('app.key');
+        return hash('sha256', $data);
+    }
+
+    /**
+     * 招待を作成（既存のメソッドを修正）
      */
     public function createInvitation(User $user): Partnership
     {
@@ -19,41 +58,29 @@ class PartnershipService
             throw new PartnershipException('既にパートナーシップが存在します');
         }
 
-        // 招待トークンを生成
+        // 6桁の招待トークンを生成
+        $invitationToken = strtoupper(Str::random(6));
+        while (Partnership::where('invitation_token', $invitationToken)->exists()) {
+            $invitationToken = strtoupper(Str::random(6));
+        }
+
+        // パートナーシップを作成
         return Partnership::create([
             'user1_id' => $user->id,
-            'invitation_token' => Str::random(32),
+            'invitation_token' => $invitationToken,
             'invitation_sent_at' => now(),
             'expires_at' => now()->addDays(7)
         ]);
     }
 
     /**
-     * 招待用のURLを生成
-     */
-    public function generateInvitationUrl(Partnership $partnership): string
-    {
-        return config('app.url') . '/partnerships/join/' . $partnership->invitation_token;
-    }
-
-    /**
-     * LINEでシェアするためのURLを生成
-     */
-    public function generateLineShareUrl(Partnership $partnership): string
-    {
-        $invitationUrl = $this->generateInvitationUrl($partnership);
-        $message = "パートナー招待が届いています\n詳細はこちら：" . $invitationUrl;
-
-        return 'https://line.me/R/msg/text/?' . urlencode($message);
-    }
-
-    /**
      * パートナーシップのマッチングを処理
      */
-    public function processMatch(string $token, User $user2): Partnership
+    public function processMatch(string $invitationToken, string $authCode, User $user2): Partnership
     {
-        // 招待トークンが有効か確認
-        $partnership = Partnership::where('invitation_token', $token)
+        // 招待トークンと認証コードが有効か確認
+        $partnership = Partnership::where('invitation_token', $invitationToken)
+            ->where('auth_code', $authCode)
             ->where('expires_at', '>', now())
             ->whereNull('user2_id')
             ->firstOrFail();
@@ -72,7 +99,8 @@ class PartnershipService
         $partnership->update([
             'user2_id' => $user2->id,
             'matched_at' => now(),
-            'invitation_token' => null
+            'invitation_token' => null,
+            'auth_code' => null  // 認証コードもクリア
         ]);
 
         return $partnership;

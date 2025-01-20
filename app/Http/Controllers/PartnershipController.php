@@ -29,6 +29,16 @@ class PartnershipController extends Controller
     {
         $user = auth()->user();
         $partnership = $user->activePartnership();
+        $canInvite = $user->canInvitePartner();
+
+        // デバッグログを追加
+        Log::info('Partnership Show状態', [
+            'user_id' => $user->id,
+            'has_partnership' => !!$partnership,
+            'can_invite' => $canInvite,
+            'partner_name' => $partnership ? $user->partner()?->name : null
+        ]);
+
 
         return Inertia::render('Partnership/Show', [
             'partnership' => $partnership ? [

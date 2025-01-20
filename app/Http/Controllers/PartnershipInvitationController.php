@@ -43,40 +43,30 @@ class PartnershipInvitationController extends Controller
         try {
             Log::info('招待作成開始');
 
-            // 環境変数から直接URLを取得
-            $invitationUrl = config('services.line.add_friend_share_url');
-            Log::info('URL取得:', ['url' => $invitationUrl]);
+            $user = auth()->user();
+            if (!$user->canInvitePartner()) {
+                return back()->with('error', '既にパートナーシップが存在するか、有効な招待があります');
+            }
 
-            // 直接レンダリング
-            return Inertia::render('Partnership/InvitationLink', [
-                'invitationUrl' => $invitationUrl
-            ]);
+            // パートナーシップを作成
+            $partnership = $this->partnershipService->createInvitation($user);
             
-            // $invitationUrl = config('services.line.add_friend_share_url');
-            // Log::info('LINE URL設定値:', [
-            //     'url' => $invitationUrl
-            // ]);
+            // LINE友達追加URLを生成
+            $invitationUrl = $this->partnershipService->generateLineAddUrl($partnership);
+            
+            Log::info('招待URL生成完了', [
+                'invitation_token' => $partnership->invitation_token,
+                'expires_at' => $partnership->expires_at
+            ]);
 
-            // if (empty($invitationUrl)) {
-            //     throw new \Exception('URLの設定が見つかりません');
-            // }
-
-            // $user = auth()->user();
-            // if (!$user->canInvitePartner()) {
-            //     return back()->with('error', '既にパートナーシップが存在するか、有効な招待があります');
-            // }
-
-            // // パートナーシップを作成
-            // $partnership = $this->partnershipService->createInvitation($user);
-
-            // // フラッシュデータとしてURLを保存
-            // return redirect()
-            //     ->route('partnerships.invitation')
-            //     ->with('invitation_url', $invitationUrl);
+            return Inertia::render('Partnership/InvitationLink', [
+                'invitationUrl' => $invitationUrl,
+                'expiresAt' => $partnership->expires_at->toISOString()
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('エラー発生:', ['error' => $e->getMessage()]);
-            return back()->with('error', $e->getMessage());
+            Log::error('招待作成エラー:', ['error' => $e->getMessage()]);
+            return back()->with('error', 'パートナー招待の作成に失敗しました');
         }
     }    
 
@@ -85,22 +75,38 @@ class PartnershipInvitationController extends Controller
      */
     public function show(Request $request)
     {
-        // $url = session('invitation_url');
-        
-        // Log::info('show メソッド', [
-        //     'flash_url' => session('invitation_url'),
-        //     'final_url' => $url
-        // ]);
+        try {
+            $user = auth()->user();
+            
+            // ユーザーの保留中の招待を取得
+            $partnership = Partnership::where('user1_id', $user->id)
+                ->where('expires_at', '>', now())
+                ->whereNull('user2_id')
+                ->latest()
+                ->first();
 
-        // 環境変数から直接URLを取得（showメソッドでも同じURLを返す）
-        $invitationUrl = config('services.line.add_friend_share_url');
-        Log::info('show メソッド', [
-            'url' => $invitationUrl
-        ]);
+            if (!$partnership) {
+                return redirect()->route('partnerships.invite')
+                    ->with('error', '有効な招待が見つかりません');
+            }
 
-        return Inertia::render('Partnership/InvitationLink', [
-            'invitationUrl' => $invitationUrl
-        ]);
+            $invitationUrl = $this->partnershipService->generateLineAddUrl($partnership);
+
+            Log::info('招待URL表示', [
+                'partnership_id' => $partnership->id,
+                'expires_at' => $partnership->expires_at
+            ]);
+
+            return Inertia::render('Partnership/InvitationLink', [
+                'invitationUrl' => $invitationUrl,
+                'expiresAt' => $partnership->expires_at->toISOString()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('招待表示エラー:', ['error' => $e->getMessage()]);
+            return redirect()->route('partnerships.invite')
+                ->with('error', '招待情報の取得に失敗しました');
+        }
     }
 
     /**
@@ -122,10 +128,12 @@ class PartnershipInvitationController extends Controller
                     'name' => $partnership->user1->name,
                 ],
                 'canAccept' => $user->canInvitePartner(),
-                'isOwnInvitation' => $partnership->user1_id === $user->id
+                'isOwnInvitation' => $partnership->user1_id === $user->id,
+                'expiresAt' => $partnership->expires_at->toISOString()
             ]);
 
         } catch (\Exception $e) {
+            Log::error('招待承認画面表示エラー:', ['error' => $e->getMessage()]);
             return Inertia::render('Partnership/Join', [
                 'error' => '無効な招待リンクです'
             ]);
