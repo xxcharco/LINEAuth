@@ -50,8 +50,8 @@ class ConditionController extends Controller
         Log::info('Received request data:', $request->all());
 
         $validated = $request->validate([
-            'desire_level' => 'required|integer|between:1,5',
-            'condition' => 'required|in:良い,普通,悪い',
+            'desire_level' => 'required|integer|between:1,4',
+            'condition' => 'required|in:良い,やや良い,やや悪い,悪い',
         ]);
 
         // 同じ日付のデータがあれば更新、なければ新規作成

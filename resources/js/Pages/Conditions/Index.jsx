@@ -74,7 +74,12 @@ export default function Index({ auth, message, currentDate }) {
         return date.toISOString().split('T')[0];
     };
 
-    const desireLevels = [1, 2, 3, 4, 5];
+    const desireLevels = [
+        { level: 1, label: 'したくない' },
+        { level: 2, label: 'ややしたくない' },
+        { level: 3, label: 'ややしたい' },
+        { level: 4, label: 'したい' }
+    ];
 
     return (
             <div className="min-h-screen bg-gray-100">
@@ -113,19 +118,19 @@ export default function Index({ auth, message, currentDate }) {
                             <h2 className="text-center text-lg mb-6">今日のセックスしたい度は？</h2>
                             <div className="relative">
                                 <div className="flex justify-between items-center px-4 mb-2">
-                                    {desireLevels.map((level) => (
-                                        <button
-                                            key={level}
-                                            type="button"
-                                            onClick={() => setData('desire_level', level)}
-                                            className={`w-14 h-14 rounded-full flex items-center justify-center text-xl
-                                                ${data.desire_level === level 
-                                                ? 'bg-yellow-400 text-white' 
-                                                : 'bg-yellow-100'}`}
-                                        >
-                                            {level}
-                                        </button>
-                                    ))}
+                                {desireLevels.map(({ level, label }) => (
+                                    <button
+                                        key={level}
+                                        type="button"
+                                        onClick={() => setData('desire_level', level)}
+                                        className={`w-14 h-14 rounded-full flex items-center justify-center text-xl
+                                            ${data.desire_level === level 
+                                            ? 'bg-yellow-400 text-white' 
+                                            : 'bg-yellow-100'}`}
+                                    >
+                                        {level}
+                                    </button>
+                                ))}
                                 </div>
                                 <div className="flex justify-between text-sm text-gray-500 px-4">
                                     <span>したくない</span>
@@ -140,10 +145,11 @@ export default function Index({ auth, message, currentDate }) {
                         {/* 体調の選択 */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h2 className="text-center text-lg mb-6">今日の体調は？</h2>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 {[
                                     { label: '良い', emoji: '😄' },
-                                    { label: '普通', emoji: '😐' },
+                                    { label: 'やや良い', emoji: '😊' },
+                                    { label: 'やや悪い', emoji: '😕' },
                                     { label: '悪い', emoji: '😫' }
                                 ].map(({ label, emoji }) => (
                                     <button
