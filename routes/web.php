@@ -77,22 +77,23 @@ Route::middleware(['auth'])->group(function () {
         // 体調記録関連のルートをグループ化
         Route::prefix('conditions')->name('conditions.')->group(function () {
             // 基本機能
-            Route::get('/', [ConditionController::class, 'index'])->name('index');
-            Route::post('/store', [ConditionController::class, 'store'])->name('store');
-            
-            // 表示機能
-            Route::get('/history', [ConditionController::class, 'history'])->name('history');
-            Route::get('/graph', [ConditionController::class, 'graph'])->name('graph');
-            Route::get('/cycle', [ConditionController::class, 'cycle'])->name('cycle');
-            
-            // リソース操作
-            Route::get('/{condition}/edit', [ConditionController::class, 'edit'])->name('edit');
-            Route::put('/{condition}', [ConditionController::class, 'update'])->name('update');
-            Route::delete('/{condition}', [ConditionController::class, 'destroy'])->name('destroy');
+        Route::get('/', [ConditionController::class, 'index'])->name('index');
+        
+        // 日付指定の保存ルートを追加（順序を変更）
+        Route::post('/store/{date?}', [ConditionController::class, 'store'])->name('store');
+        
+        // 表示機能
+        Route::get('/history', [ConditionController::class, 'history'])->name('history');
+        Route::get('/graph', [ConditionController::class, 'graph'])->name('graph');
+        Route::get('/cycle', [ConditionController::class, 'cycle'])->name('cycle');
+        
+        // リソース操作
+        Route::get('/{condition}/edit', [ConditionController::class, 'edit'])->name('edit');
+        Route::put('/{condition}', [ConditionController::class, 'update'])->name('update');
+        Route::delete('/{condition}', [ConditionController::class, 'destroy'])->name('destroy');
 
-            // 日付指定のルートを追加
-            Route::get('/date/{date}', [ConditionController::class, 'index'])->name('date');
-
+        // 日付指定のルート
+        Route::get('/date/{date}', [ConditionController::class, 'index'])->name('date');
         });
 
         // 月経記録関連のルートをグループ化

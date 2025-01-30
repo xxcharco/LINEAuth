@@ -33,23 +33,27 @@ export default function Index({ auth, message, currentDate }) {
 
     const submit = (e) => {
         e.preventDefault();
-        console.log('Submitting data:', {
+        
+        const submitData = {
             desire_level: data.desire_level,
-            condition: data.condition
-        }); // デバッグ用
+            condition: data.condition,
+            recorded_date: displayDate
+        };
     
-        post(route('conditions.store'), {
-            desire_level: data.desire_level,
-            condition: data.condition
-        }, {
-            onSuccess: () => {
-                console.log('Success!'); // デバッグ用
-                reset();
-            },
-            onError: (errors) => {
-                console.error('Errors:', errors);
-            }
-        });
+        // 送信データをコンソールに出力
+        console.log('About to submit:', submitData);
+    
+        // 送信オプションを明示的に指定
+        const options = {
+            preserveScroll: true,
+            onBefore: () => console.log('Before submit'),
+            onSuccess: () => console.log('Success'),
+            onError: (errors) => console.error('Errors:', errors),
+            onFinish: () => console.log('Finish')
+        };
+    
+        // 送信実行
+        post(route('conditions.store'), submitData, options);
     };
 
     // 日付のフォーマット関数

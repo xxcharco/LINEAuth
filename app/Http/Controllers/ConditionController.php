@@ -47,17 +47,27 @@ class ConditionController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info('Received request data:', $request->all());
+        Log::info('Full request details:', [
+            'all' => $request->all(),
+            'referer' => $request->header('referer')  // リファラーを確認
+        ]);
 
         $validated = $request->validate([
             'desire_level' => 'required|integer|between:1,4',
             'condition' => 'required|in:良い,やや良い,やや悪い,悪い',
         ]);
 
-        // 同じ日付のデータがあれば更新、なければ新規作成
+        // リファラーからrecorded_dateを取得
+        $recordedDate = null;
+        if ($request->header('referer')) {
+            if (preg_match('/\/date\/(\d{4}-\d{2}-\d{2})/', $request->header('referer'), $matches)) {
+                $recordedDate = $matches[1];
+            }
+        }
+
         $condition = Condition::updateOrCreate(
-            ['recorded_date' => now()->format('Y-m-d')],  // 検索条件
-            $validated  // 更新または作成するデータ
+            ['recorded_date' => $recordedDate ?: now()->format('Y-m-d')],
+            $validated
         );
 
         Log::info('Saved condition:', $condition->toArray());

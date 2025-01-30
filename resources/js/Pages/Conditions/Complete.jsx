@@ -1,8 +1,15 @@
-import { Head } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import Footer from '@/Components/Footer';
 
 export default function Complete({ message = '記録しました' }) {
+    // 前日の日付を取得（Index.jsxと同じロジック）
+    const getPreviousDate = (dateStr) => {
+    const today = new Date().toISOString().split('T')[0];
+    const date = new Date(dateStr || new Date());
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+    };
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="max-w-2xl mx-auto pt-8 px-4">
@@ -43,7 +50,7 @@ export default function Complete({ message = '記録しました' }) {
                 {/* アクションボタン */}
                 <div className="space-y-2">
                     <Link 
-                        href="/conditions/history" 
+                        href={`/conditions/date/${getPreviousDate(new Date())}`}
                         className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"
                     >
                         昨日の体調を記録
