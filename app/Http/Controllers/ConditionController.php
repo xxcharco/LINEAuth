@@ -83,11 +83,15 @@ class ConditionController extends Controller
         $conditions = Condition::orderBy('recorded_date', 'desc')
             ->get()
             ->map(function ($condition) {
+                $recordDate = \Carbon\Carbon::parse($condition->recorded_date);
+                $yesterday = now()->subDay()->startOfDay();
+
                 return [
                     'id' => $condition->id,
-                    'date' => \Carbon\Carbon::parse($condition->recorded_date)->format('Y-m-d'),
-                    'is_high' => $condition->is_high,
+                    'date' => $recordDate->format('Y-m-d'),
+                    'desire_level' => $condition->desire_level,
                     'condition' => $condition->condition,
+                    'can_edit' => $recordDate->greaterThanOrEqualTo($yesterday) // 編集可能フラグ
                 ];
             });
 

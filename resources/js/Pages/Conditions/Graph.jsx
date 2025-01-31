@@ -19,31 +19,40 @@ export default function Graph({ conditions }) {
 
                 {/* 日々の記録一覧 */}
                 <div className="space-y-4">
-                    {conditions.map((condition) => (
+                {conditions.map((condition) => {
+                    // 日付チェック用のコード（前述の通り）
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+                    const conditionDate = new Date(condition.date);
+
+                    return (
                         <div key={condition.id} className="bg-white rounded-lg p-4 shadow-sm">
-                            {/* 日付 */}
+                            {/* 日付部分 */}
                             <div className="flex items-center justify-between mb-2">
                                 <div className="text-gray-600">{condition.date}</div>
-                                <Link 
-                                    href={route('conditions.edit', condition.id)}
-                                    className="text-blue-500 text-sm"
-                                >
-                                    編集
-                                </Link>
+                                {condition.can_edit && (
+                                    <Link 
+                                        href={`/conditions/date/${condition.date}`}
+                                        className="text-blue-500 text-sm"
+                                    >
+                                        編集
+                                    </Link>
+                                )}
                             </div>
                             
-                            {/* 高まり状態 */}
+                            {/* セックスしたい度の表示を修正 */}
                             <div className="mb-2">
-                                <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                                    condition.is_high 
-                                    ? 'bg-blue-100 text-blue-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                    {condition.is_high ? '高まっている' : '高まっていない'}
+                                <span className="text-sm text-gray-600 mr-2">セックスしたい度：</span>
+                                <span className="text-sm font-medium">
+                                    {condition.desire_level === 4 ? 'したい' :
+                                    condition.desire_level === 3 ? 'ややしたい' :
+                                    condition.desire_level === 2 ? 'ややしたくない' :
+                                    'したくない'}
                                 </span>
                             </div>
 
-                            {/* 体調 */}
+                            {/* 体調の表示を修正 */}
                             <div className="flex items-center">
                                 <span className="text-sm text-gray-600 mr-2">体調：</span>
                                 <span className={`text-sm font-medium ${
@@ -56,7 +65,8 @@ export default function Graph({ conditions }) {
                                 </span>
                             </div>
                         </div>
-                    ))}
+                    );
+                })}
                 </div>
             </div>
             <Footer />

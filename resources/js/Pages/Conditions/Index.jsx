@@ -7,6 +7,11 @@ export default function Index({ auth, message, currentDate }) {
     const today = new Date().toISOString().split('T')[0];
     const displayDate = currentDate || today;
 
+    // 前日の日付を計算（ここに移動）
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
     const { data, setData, post, processing, reset } = useForm({
         desire_level: null,
         condition: null,
@@ -90,13 +95,19 @@ export default function Index({ auth, message, currentDate }) {
                 <div className="max-w-2xl mx-auto pt-8 px-4">
                     {/* ヘッダー */}
                     <div className="flex items-center justify-between w-full">
-                        {/* 左矢印 */}
-                        <Link
-                            href={`/conditions/date/${getPreviousDate(displayDate)}`}
-                            className="text-gray-400 w-8 text-center"
-                        >
-                            ＜
-                        </Link>
+                        {/* 左矢印 - 表示中の日付が今日か昨日の場合のみ表示 */}
+                        {displayDate > yesterdayStr && (
+                            <Link
+                                href={`/conditions/date/${getPreviousDate(displayDate)}`}
+                                className="text-gray-400 w-8 text-center"
+                            >
+                                ＜
+                            </Link>
+                        )}
+                        {/* 昨日より前の日付の場合は空のスペース */}
+                        {displayDate <= yesterdayStr && (
+                            <div className="w-8"></div>
+                        )}
 
                         {/* 日付（中央配置） */}
                         <span className="text-gray-600 flex-grow text-center">
