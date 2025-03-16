@@ -10,6 +10,7 @@ class Condition extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'recorded_date',
         'desire_level',
         'condition'
@@ -19,4 +20,9 @@ class Condition extends Model
         'recorded_date' => 'date',
         'desire_level' => 'integer'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

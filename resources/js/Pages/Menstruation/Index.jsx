@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react'; 
-import Footer from '@/Components/Footer';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Index({ records }) {
+export default function Index({ auth, records }) {
     const [activeTab, setActiveTab] = useState(2);
     const currentRecord = records[2 - activeTab] || null;
 
@@ -31,7 +31,7 @@ export default function Index({ records }) {
     const recordButton = getRecordButton();
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <AuthenticatedLayout user={auth.user}>
             <div className="max-w-2xl mx-auto pt-8 px-4">
                 <h1 className="text-center text-xl font-bold mb-8">月経管理</h1>
                 
@@ -118,7 +118,6 @@ export default function Index({ records }) {
                     </div>
                 </div>
             </div>
-            <Footer />
-        </div>
+        </AuthenticatedLayout>
     );
 }

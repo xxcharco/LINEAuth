@@ -1,6 +1,7 @@
-import { useForm, Link } from '@inertiajs/react';
+import React from 'react';
+import { useForm, Link, router } from '@inertiajs/react';
 import { useEffect } from 'react';
-import Footer from '@/Components/Footer';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index({ auth, message, currentDate }) {
 
@@ -91,9 +92,9 @@ export default function Index({ auth, message, currentDate }) {
     ];
 
     return (
-            <div className="min-h-screen bg-gray-100">
-                <div className="max-w-2xl mx-auto pt-8 px-4">
-                    {/* ヘッダー */}
+        <AuthenticatedLayout user={auth.user}>
+            <div className="max-w-2xl mx-auto pt-8 px-4 pb-16">
+                <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="flex items-center justify-between w-full">
                         {/* 左矢印 - 表示中の日付が今日か昨日の場合のみ表示 */}
                         {displayDate > yesterdayStr && (
@@ -127,40 +128,36 @@ export default function Index({ auth, message, currentDate }) {
                         )}
                     </div>
 
-                    <form onSubmit={submit} className="space-y-8">
+                    <form onSubmit={submit} className="space-y-4">
                         {/* セックスしたい度の選択 */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <h2 className="text-center text-lg mb-6">今日のセックスしたい度は？</h2>
-                            <div className="relative">
-                                <div className="flex justify-between items-center px-4 mb-2">
+                        <div className="bg-white rounded-lg p-4 shadow-sm">
+                            <h3 className="flex items-center text-gray-700 mb-4 font-medium">
+                                今日のセックスしたい度は？
+                            </h3>
+                            <div className="space-y-2">
                                 {desireLevels.map(({ level, label }) => (
                                     <button
                                         key={level}
                                         type="button"
                                         onClick={() => setData('desire_level', level)}
-                                        className={`w-14 h-14 rounded-full flex items-center justify-center text-xl
-                                            ${data.desire_level === level 
-                                            ? 'bg-yellow-400 text-white' 
-                                            : 'bg-yellow-100'}`}
+                                        className={`w-full p-4 rounded-lg border ${
+                                            data.desire_level === level 
+                                            ? 'bg-blue-500 text-white border-blue-500' 
+                                            : 'bg-white border-gray-300'
+                                        }`}
                                     >
-                                        {level}
+                                        {label}
                                     </button>
                                 ))}
-                                </div>
-                                <div className="flex justify-between text-sm text-gray-500 px-4">
-                                    <span>したくない</span>
-                                    <span>したい</span>
-                                </div>
-                                <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 -z-10">
-                                    <div className="h-0.5 bg-gray-200"></div>
-                                </div>
                             </div>
                         </div>
 
                         {/* 体調の選択 */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <h2 className="text-center text-lg mb-6">今日の体調は？</h2>
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg p-4 shadow-sm">
+                            <h3 className="flex items-center text-gray-700 mb-4 font-medium">
+                                今日の体調は？
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
                                 {[
                                     { label: '良い', emoji: '😄' },
                                     { label: 'やや良い', emoji: '😊' },
@@ -171,12 +168,13 @@ export default function Index({ auth, message, currentDate }) {
                                         key={label}
                                         type="button"
                                         onClick={() => setData('condition', label)}
-                                        className={`aspect-square rounded-lg flex flex-col items-center justify-center
-                                            ${data.condition === label 
-                                            ? 'bg-yellow-400 text-white' 
-                                            : 'bg-yellow-100'}`}
+                                        className={`p-4 rounded-lg border ${
+                                            data.condition === label 
+                                            ? 'bg-blue-500 text-white border-blue-500' 
+                                            : 'bg-white border-gray-300'
+                                        }`}
                                     >
-                                        <span className="text-2xl mb-2">{emoji}</span>
+                                        <span className="text-lg mb-1">{emoji}</span>
                                         <span>{label}</span>
                                     </button>
                                 ))}
@@ -184,21 +182,18 @@ export default function Index({ auth, message, currentDate }) {
                         </div>
 
                         {/* 記録ボタン */}
-                        <div className="fixed bottom-20 inset-x-0">
-                            <div className="max-w-2xl mx-auto px-4">
-                                <button
-                                    type="submit"
-                                    disabled={processing || !data.desire_level || !data.condition}
-                                    className="w-full h-16 bg-yellow-400 text-white rounded-full disabled:opacity-50
-                                        flex items-center justify-center text-lg font-medium"
-                                >
-                                    記録する
-                                </button>
-                            </div>
+                        <div className="space-y-2">
+                            <button
+                                type="submit"
+                                disabled={processing || !data.desire_level || !data.condition}
+                                className="w-full bg-black text-white p-4 rounded-lg disabled:opacity-50"
+                            >
+                                記録する
+                            </button>
                         </div>
                     </form>
                 </div>
-                <Footer />
             </div>
+        </AuthenticatedLayout>
     );
 }

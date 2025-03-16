@@ -49,12 +49,12 @@ export default function Complete({ message = '記録しました' }) {
 
                 {/* アクションボタン */}
                 <div className="space-y-2">
-                    <Link 
-                        href={`/conditions/date/${getPreviousDate(new Date())}`}
-                        className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"
-                    >
-                        昨日の体調を記録
-                    </Link>
+                <Link 
+                    href={route('conditions.date', { date: getPreviousDate(new Date()) })}
+                    className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"
+                >
+                    昨日の体調を記録
+                </Link>
                     <Link 
                         href={route('conditions.graph')} 
                         className="block w-full p-4 bg-white rounded-lg shadow-sm text-center"

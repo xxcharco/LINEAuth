@@ -20,9 +20,10 @@ class ConditionController extends Controller
 
         Log::info('Processing date:', ['date' => $targetDate->format('Y-m-d')]);
 
-        // その日の記録を取得
+        // ユーザーIDでフィルタリングを追加
         $todayCondition = Condition::where('recorded_date', $targetDate->format('Y-m-d'))
-        ->first();
+            ->where('user_id', auth()->id())
+            ->first();
         
         // デバッグログの追加
         Log::info('Today\'s condition:', ['condition' => $todayCondition]);
@@ -49,7 +50,7 @@ class ConditionController extends Controller
     {
         Log::info('Full request details:', [
             'all' => $request->all(),
-            'referer' => $request->header('referer')  // リファラーを確認
+            'referer' => $request->header('referer')
         ]);
 
         $validated = $request->validate([
@@ -65,9 +66,17 @@ class ConditionController extends Controller
             }
         }
 
+        // validatedデータにuser_idを追加
+        $data = array_merge($validated, [
+            'user_id' => auth()->id()  // ここでuser_idを追加
+        ]);
+
         $condition = Condition::updateOrCreate(
-            ['recorded_date' => $recordedDate ?: now()->format('Y-m-d')],
-            $validated
+            [
+                'recorded_date' => $recordedDate ?: now()->format('Y-m-d'),
+                'user_id' => auth()->id()  // 検索条件にもuser_idを追加
+            ],
+            $data
         );
 
         Log::info('Saved condition:', $condition->toArray());
@@ -80,7 +89,9 @@ class ConditionController extends Controller
      */
     public function graph()
     {
-        $conditions = Condition::orderBy('recorded_date', 'desc')
+        // ユーザーIDでフィルタリングを追加
+        $conditions = Condition::where('user_id', auth()->id())
+            ->orderBy('recorded_date', 'desc')
             ->get()
             ->map(function ($condition) {
                 $recordDate = \Carbon\Carbon::parse($condition->recorded_date);
@@ -91,7 +102,7 @@ class ConditionController extends Controller
                     'date' => $recordDate->format('Y-m-d'),
                     'desire_level' => $condition->desire_level,
                     'condition' => $condition->condition,
-                    'can_edit' => $recordDate->greaterThanOrEqualTo($yesterday) // 編集可能フラグ
+                    'can_edit' => $recordDate->greaterThanOrEqualTo($yesterday)
                 ];
             });
 

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
+import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 
-export default function Footer() {
+export default function Footer({ auth }) {
     return (
         <div className="fixed bottom-0 inset-x-0 bg-white border-t">
             <div className="max-w-2xl mx-auto px-4">
