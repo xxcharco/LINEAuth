@@ -15,4 +15,4 @@ elif [ "$1" = "prod" ]; then
 else
     echo "Please specify environment: ngrok or prod"
     echo "Usage: ./switch-env.sh [ngrok|prod]"
-fi 
+fi
