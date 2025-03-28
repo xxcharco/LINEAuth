@@ -14,7 +14,8 @@ class MenstruationController extends Controller
 {
     public function index()
     {
-        $records = Menstruation::orderBy('start_date', 'desc')
+        $records = Menstruation::where('user_id', auth()->id())
+            ->orderBy('start_date', 'desc')
             ->take(3)
             ->get()
             ->map(function ($record) {
@@ -32,12 +33,16 @@ class MenstruationController extends Controller
 
     public function create(Request $request)
     {
-        $latestRecord = Menstruation::latest('start_date')->first();
+        // 現在のユーザーの最新の記録を取得
+        $latestRecord = Menstruation::where('user_id', auth()->id())
+            ->latest('start_date')
+            ->first();
         
         Log::info('Create action', [
             'request_type' => $request->query('type'),
             'latest_record' => $latestRecord,
-            'has_end_date' => isset($latestRecord?->end_date)
+            'has_end_date' => isset($latestRecord?->end_date),
+            'user_id' => auth()->id()  // ログにユーザーIDも追加
         ]);
 
         // typeパラメータが'end'で、かつ最新の記録があり終了日がない場合
@@ -88,14 +93,22 @@ class MenstruationController extends Controller
 
     public function store(StoreMenstruationRequest $request)
     {
-        Menstruation::create($request->validated());
+        // 現在のユーザーIDを追加
+        $data = $request->validated();
+        $data['user_id'] = auth()->id();
+        
+        Menstruation::create($data);
 
         return Inertia::render('Menstruation/Complete');
     }
 
     public function storeEnd(StoreMenstruationEndRequest $request)
     {
-        $menstruation = Menstruation::latest()->first();
+        // 現在のユーザーの最新の記録を取得
+        $menstruation = Menstruation::where('user_id', auth()->id())
+            ->latest()
+            ->first();
+        
         $menstruation->update($request->validated());
 
         return Inertia::render('Menstruation/Complete');
